@@ -10,7 +10,6 @@ import java.awt.Font;
 import java.awt.Toolkit;
 import java.text.NumberFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 import javax.swing.BorderFactory;
@@ -336,7 +335,6 @@ public class CheckoutPanel extends JPanel {
 		String title = item.build.get(ComponentType.CPU).map(p -> p.name).orElse("CPU") + " / "
 				+ item.build.get(ComponentType.GPU).map(p -> p.name).orElse("GPU") + " / "
 				+ item.build.get(ComponentType.MOTHERBOARD).map(p -> p.name).orElse("MB");
-		JLabel name = new JLabel(title);
 		
 		JPanel centerPanel=new JPanel();
 		centerPanel.setOpaque(false);
@@ -358,6 +356,7 @@ public class CheckoutPanel extends JPanel {
 			line.setOpaque(false);
 			
 			JLabel partLabel=new JLabel(p.name+" ("+NumberFormat.getInstance().format(p.price)+"원)");
+			line.add(partLabel,BorderLayout.WEST);
 			JSpinner partQty=new JSpinner(new SpinnerNumberModel(item.getPartQty(t),1,99,1));
 			partQty.addChangeListener(ev->{
 				cart.updatePartQuantity(item.id, t, (Integer)partQty.getValue());
@@ -384,10 +383,9 @@ public class CheckoutPanel extends JPanel {
 		// 수량/삭제/소계
 		JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
 		JSpinner qty = new JSpinner(new SpinnerNumberModel(item.quantity, 1, 99, 1));
-		JLabel price=new JLabel(money(item.subtotal())+"원");
 		qty.addChangeListener(e -> {
 			cart.updateQuantity(item.id, (Integer) qty.getValue());
-			price.setText(money(item.subtotal())+"원");		//소계 즉시 갱신
+			itemSubtotalLabel.setText(money(item.subtotal())+"원");		//소계 즉시 갱신
 			cartTotalLabel.setText("최종 결제 금액 : "+money(cart.total())+"원");	//총액 즉시 갱신
 			reevaluatePayButtons();
 		});
@@ -398,7 +396,7 @@ public class CheckoutPanel extends JPanel {
 		});
 		right.add(new JLabel("수량"));
 		right.add(qty);
-		right.add(price);
+		right.add(itemSubtotalLabel);
 		right.add(remove);
 		card.add(right, BorderLayout.EAST);
 		return card;
@@ -431,7 +429,7 @@ public class CheckoutPanel extends JPanel {
 				boolean cellHasFocus) {
 			JLabel c = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 			if (value instanceof OptionView ov) {
-				String name = ov.part.name + " - " + NumberFormat.getInstance(Locale.KOREA).format(ov.part.price) + "원";
+				String name = ov.part.name + " - " + NumberFormat.getInstance().format(ov.part.price) + "원";
 				if (ov.enabled) {
 					c.setText(name);
 					c.setForeground(isSelected ? list.getSelectionForeground() : list.getForeground());

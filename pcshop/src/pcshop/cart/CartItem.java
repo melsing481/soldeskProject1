@@ -35,9 +35,9 @@ public final class CartItem {
 	public int partsSubtotal() {
 		int sum=0;
 		for(ComponentType t : build.asMap().keySet()) {
-			Optional<Part> op = build.get(t);
-			if(op.isPresent()) {
-				Part p = op.get();
+			Optional<Part> opt=build.get(t);
+			if(opt.isPresent()) {
+				Part p = opt.get();
 				sum +=p.price*getPartQty(t);	//부품 단가 * 수량
 			}
 		}
