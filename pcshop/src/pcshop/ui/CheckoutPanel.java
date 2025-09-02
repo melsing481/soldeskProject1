@@ -77,7 +77,7 @@ public class CheckoutPanel extends JPanel {
 	private JLabel cartTotalLabel;
 
 	// 숫자 포맷 (원화)
-	private final NumberFormat money = NumberFormat.getInstance(Locale.KOREA);
+	private final NumberFormat wonFmt = NumberFormat.getInstance();
 
 	public CheckoutPanel() {
 		setPreferredSize(new Dimension(900,600)); //부모 프레임에서 pack을 호출하게
@@ -350,10 +350,36 @@ public class CheckoutPanel extends JPanel {
 		partPanel.setLayout(new BoxLayout(partPanel, BoxLayout.Y_AXIS));
 		
 		for(ComponentType t: item.build.asMap().keySet()) {
-			var
+			var optPart = item.build.get(t);
+			if(optPart.isEmpty()) continue;
+			var p =optPart.get();
+			
+			JPanel line = new JPanel(new BorderLayout(8,0));
+			line.setOpaque(false);
+			
+			JLabel partLabel=new JLabel(p.name+" ("+NumberFormat.getInstance().format(p.price)+"원)");
+			JSpinner partQty=new JSpinner(new SpinnerNumberModel(item.getPartQty(t),1,99,1));
+			partQty.addChangeListener(ev->{
+				cart.updatePartQuantity(item.id, t, (Integer)partQty.getValue());
+				itemSubtotalLabel.setText(money(item.subtotal())+"원");			//소계 즉시 갱신
+				cartTotalLabel.setText("최종 결제 금액 : "+money(cart.total())+"원");//총액 즉시 갱신
+				reevaluatePayButtons();
+			});
+			
+			JPanel rightQty =new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0));
+			rightQty.setOpaque(false);
+			rightQty.add(new JLabel("수량"));
+			rightQty.add(partQty);
+			line.add(rightQty, BorderLayout.EAST);
+			
+			partPanel.add(line);
+			partPanel.add(Box.createVerticalStrut(4));
 		}
 		
-		card.add(name, BorderLayout.CENTER);
+		centerPanel.add(Box.createVerticalStrut(6));
+		centerPanel.add(partPanel);
+		
+		card.add(centerPanel,BorderLayout.CENTER);
 
 		// 수량/삭제/소계
 		JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
@@ -395,7 +421,7 @@ public class CheckoutPanel extends JPanel {
 	}
 
 	private String money(int v) {
-		return money.format(v);
+		return wonFmt.format(v);
 	}
 
 	// 옵션 렌더러: 비활성 옵션은 회색 처리 + (선택 불가: 사유) 표시
